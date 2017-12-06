@@ -83,8 +83,7 @@ func getLatestTag() string {
 func main() {
 	templatePath := os.Getenv("UPDATE_DOCKER_TAG_PATH")
 	if templatePath == "" {
-		fmt.Printf("You need to set UPDATE_DOCKER_TAG_PATH to the path where your kubernetes templates are located.")
-		os.Exit(1)
+		templatePath = "."
 	}
 
 	var newTag string
