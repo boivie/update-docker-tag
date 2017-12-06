@@ -52,7 +52,7 @@ func investigateFile(t miniDeployment, filename string, image string, newTag str
 			if parts[0] == image {
 				baseName := path.Base(filename)
 				if container.Image != newTag {
-					fmt.Fprintf(os.Stderr, "%s (%s) %s -> %s\n", baseName, container.Name, container.Image, newTag)
+					fmt.Fprintf(os.Stderr, "%s (%s/%s) %s -> %s\n", baseName, t.Metadata.Name, container.Name, container.Image, newTag)
 					patchFile(filename, container.Image, newTag)
 				}
 			}
