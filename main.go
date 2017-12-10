@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -14,6 +15,8 @@ import (
 	"github.com/docker/docker/client"
 
 	yaml "gopkg.in/yaml.v2"
+
+	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
 )
 
 type miniDeployment struct {
@@ -95,18 +98,32 @@ func main() {
 
 	image := strings.SplitN(newTag, ":", 2)[0]
 
-	err := filepath.Walk(templatePath, func(path string, f os.FileInfo, err error) error {
+	err := filepath.Walk(templatePath, func(path string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(path, ".yaml") {
-			data, err := ioutil.ReadFile(path)
+			f, err := os.Open(path)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Failed to read file %s - skipping.\n", path)
 			} else {
-				t := miniDeployment{}
-				err = yaml.Unmarshal(data, &t)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Failed to parse YAML in %s - skipping.\n", path)
-				} else {
-					investigateFile(t, path, image, newTag)
+				defer f.Close()
+				data := make([]byte, 4096)
+				decoder := utilyaml.NewDocumentDecoder(f)
+				for {
+					n, err := decoder.Read(data)
+					if err != nil {
+						if err != io.EOF {
+							fmt.Fprintf(os.Stderr, "Failed to parse YAML in %s - skipping.\n", path)
+						}
+						break
+					} else {
+						fmt.Fprintf(os.Stderr, "Read %d byte YAML document from %s.\n", n, path)
+						t := miniDeployment{}
+						err = yaml.Unmarshal(data[:n], &t)
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "Failed to parse YAML in %s [%v]- skipping.\n", path, err)
+						} else {
+							investigateFile(t, path, image, newTag)
+						}
+					}
 				}
 			}
 		}
