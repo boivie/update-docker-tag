@@ -46,7 +46,7 @@ func patchFile(filename string, oldTag, newTag string) {
 }
 
 func investigateFile(t miniDeployment, filename string, image string, newTag string) {
-	if t.APIVersion == "apps/v1beta1" && t.Kind == "Deployment" {
+	if t.Kind == "Deployment" {
 		for _, container := range t.Spec.Template.Spec.Containers {
 			parts := strings.SplitN(container.Image, ":", 2)
 			if parts[0] == image {
