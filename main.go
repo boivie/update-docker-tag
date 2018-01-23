@@ -40,7 +40,7 @@ func patchFile(filename string, oldTag, newTag string) {
 		fmt.Fprintf(os.Stderr, "Failed to patch %s - skipping\n", filename)
 		return
 	}
-	var reImage = regexp.MustCompile(fmt.Sprintf("image:\\s*%s\\s*\n", oldTag))
+	var reImage = regexp.MustCompile(fmt.Sprintf("image:\\s*['\"]*%s\\s*['\"]*\n", oldTag))
 	newData := reImage.ReplaceAllLiteral(data, []byte("image: "+newTag+"\n"))
 	ioutil.WriteFile(filename, newData, 0644)
 }
